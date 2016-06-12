@@ -8,64 +8,6 @@ void usage()
     exit(-1);
 }
 
-void parse(char * text)
-{
-    char * filename = "foo.c";
-    FILE * fp = fopen(filename, "w");
-    if(fp == NULL)
-    {
-        fprintf(stderr, "Couldn't open file needed for writing.\n");
-    }
-
-    fprintf(fp, "#include <stdlib.h>\n int main() { char array[2048] = {0}; char * ptr = array; ");
-
-    int i;
-    for(i = 0; i < strlen(text); i++)
-    {
-        switch(text[i])
-        {
-            case '.':
-                fprintf(fp, "putchar(*ptr);");
-                break;
-
-            case ',':
-                fprintf(fp, "*ptr = getchar();");
-                break;
-
-            case '+':
-                fprintf(fp, "++*ptr;");
-                break;
-
-            case '-':
-                fprintf(fp, "--*ptr;");
-                break;
-
-            case '[':
-                fprintf(fp, "while(*ptr) {");
-                break;
-
-            case ']':
-                fprintf(fp, "}");
-                break;
-
-            case '>':
-                fprintf(fp, "++ptr;");
-                break;
-
-            case '<':
-                fprintf(fp, "--ptr;");
-                break;
-
-            default:
-                fprintf(stdout, "Ignoring token; %c\n", text[i]);
-                break;
-        }
-    }
-
-    fprintf(fp, "}");
-    fclose(fp);
-}
-
 int main(int argc, char * argv[])
 {
     if(argc != 2)
@@ -73,33 +15,68 @@ int main(int argc, char * argv[])
         usage();
     }
 
-    char * filename = argv[1];
-    FILE * fp = fopen(filename, "r");
+    char * readFilename = argv[1];
+    FILE * readFp = fopen(readFilename, "r");
 
-    if(fp == NULL)
+    if(readFp == NULL)
     {
-        fprintf(stderr, "Could not open file %s\n", filename);
+        fprintf(stderr, "Could not open file %s\n", readFilename);
     }
 
-    /* Get file size */
-    fseek(fp, 0, SEEK_END);
-    long fileSize = ftell(fp);
-    rewind(fp);
-
-    char * buffer = (char *)malloc(sizeof(char) * fileSize);
-    if(buffer == NULL)
+    char * writeFilename = "foo.c";
+    FILE * writeFp = fopen(writeFilename, "w");
+    if(writeFp == NULL)
     {
-        fprintf(stderr, "Could not allocate the needed memory; %li bytes\n", fileSize);
+        fprintf(stderr, "Couldn't open file needed for writing.\n");
     }
 
-    size_t result = fread(buffer, 1, fileSize, fp);
-    if(result != fileSize)
+    fprintf(writeFp, "#include <stdlib.h>\n int main() { char array[2048] = {0}; char * ptr = array; ");
+
+    char c;
+    while((c = fgetc(readFp)) != EOF)
     {
-        fprintf(stderr, "Something went wrong when reading the file.\n");
+        switch(c)
+        {
+            case '.':
+                fprintf(writeFp, "putchar(*ptr);");
+                break;
+
+            case ',':
+                fprintf(writeFp, "*ptr = getchar();");
+                break;
+
+            case '+':
+                fprintf(writeFp, "++*ptr;");
+                break;
+
+            case '-':
+                fprintf(writeFp, "--*ptr;");
+                break;
+
+            case '[':
+                fprintf(writeFp, "while(*ptr) {");
+                break;
+
+            case ']':
+                fprintf(writeFp, "}");
+                break;
+
+            case '>':
+                fprintf(writeFp, "++ptr;");
+                break;
+
+            case '<':
+                fprintf(writeFp, "--ptr;");
+                break;
+
+            default:
+                fprintf(stdout, "Ignoring token; %c\n", c);
+                break;
+        }
     }
 
-    parse(buffer);
-    fclose(fp);
-    free(buffer);
+    fprintf(writeFp, "}");
+    fclose(writeFp);
+    fclose(readFp);
     return 0;
 }
